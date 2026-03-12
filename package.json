@@ -1,0 +1,9 @@
+{
+  "name": "octant-copilot",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "cd widget && npm run dev",
+    "build": "cd widget && npm run build"
+  }
+}

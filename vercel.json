@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd widget && npm install && npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/chat", "destination": "/api/chat" }
+  ]
+}
