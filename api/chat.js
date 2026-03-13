@@ -1,21 +1,19 @@
-const SYSTEM_PROMPT = `You are an Octant donation copilot. Octant (octant.app) is a platform for funding public goods with multiple funding mechanisms:
-- Epoch rounds: periodic quadratic funding rounds
-- Continuous/streaming funding: ongoing funding streams
-- One-off rounds: single special funding events
+import { fetchOctantData, buildSystemPrompt } from "./octant.js";
 
-When a user describes their interests, use web search to find current and recent projects on octant.app across all active rounds and funding types. Be conversational and warm. For follow-up messages, use the conversation history to refine your recommendations.
+// Cache Octant data for 5 minutes to avoid hitting their API on every chat message
+let cachedData = null;
+let cacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000;
 
-Always respond with a raw JSON object (no markdown, no backticks) with:
-- "reply": short friendly message (1-2 sentences)
-- "projects": array of 3-5 project objects, each with:
-    - "name": project name
-    - "description": 1-2 sentence description
-    - "fundingType": e.g. "Epoch round", "Continuous streaming", "One-off round"
-    - "round": round name/number if applicable
-    - "matchReason": one sentence on why it matches the user's interests
-    - "url": direct link on octant.app, or "https://octant.app/explore"
-
-Return ONLY raw JSON. No markdown, no backticks, no preamble.`;
+async function getOctantContext() {
+  const now = Date.now();
+  if (cachedData && now - cacheTime < CACHE_TTL) {
+    return cachedData;
+  }
+  cachedData = await fetchOctantData();
+  cacheTime = now;
+  return cachedData;
+}
 
 export default async function handler(req, res) {
   // CORS
@@ -41,13 +39,13 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "messages array required" });
   }
 
-  // Build input array with system instruction + conversation history
-  const input = [
-    { role: "system", content: SYSTEM_PROMPT },
-    ...messages,
-  ];
-
   try {
+    // Fetch real Octant project data
+    const octantData = await getOctantContext();
+    const systemPrompt = buildSystemPrompt(octantData);
+
+    const input = [{ role: "system", content: systemPrompt }, ...messages];
+
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -56,7 +54,6 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: "gpt-4o",
-        tools: [{ type: "web_search_preview" }],
         input,
       }),
     });

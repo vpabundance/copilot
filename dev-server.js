@@ -2,6 +2,7 @@ import { createServer } from "http";
 import { readFileSync, existsSync } from "fs";
 import { join, extname } from "path";
 import { fileURLToPath } from "url";
+import { fetchOctantData, buildSystemPrompt } from "./api/octant.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -20,25 +21,22 @@ if (existsSync(envPath)) {
   }
 }
 
-// Import the API handler logic inline (since it's an ESM default export for Vercel)
-const SYSTEM_PROMPT = `You are an Octant donation copilot. Octant (octant.app) is a platform for funding public goods with multiple funding mechanisms:
-- Epoch rounds: periodic quadratic funding rounds
-- Continuous/streaming funding: ongoing funding streams
-- One-off rounds: single special funding events
+// Cache Octant data for 5 minutes
+let cachedData = null;
+let cacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000;
 
-When a user describes their interests, use web search to find current and recent projects on octant.app across all active rounds and funding types. Be conversational and warm. For follow-up messages, use the conversation history to refine your recommendations.
-
-Always respond with a raw JSON object (no markdown, no backticks) with:
-- "reply": short friendly message (1-2 sentences)
-- "projects": array of 3-5 project objects, each with:
-    - "name": project name
-    - "description": 1-2 sentence description
-    - "fundingType": e.g. "Epoch round", "Continuous streaming", "One-off round"
-    - "round": round name/number if applicable
-    - "matchReason": one sentence on why it matches the user's interests
-    - "url": direct link on octant.app, or "https://octant.app/explore"
-
-Return ONLY raw JSON. No markdown, no backticks, no preamble.`;
+async function getOctantContext() {
+  const now = Date.now();
+  if (cachedData && now - cacheTime < CACHE_TTL) {
+    return cachedData;
+  }
+  console.log("Fetching fresh Octant project data...");
+  cachedData = await fetchOctantData();
+  cacheTime = now;
+  console.log(`Loaded ${cachedData.projects.length} projects from epochs up to ${cachedData.currentEpoch}`);
+  return cachedData;
+}
 
 const MIME = {
   ".html": "text/html",
@@ -79,9 +77,13 @@ const server = createServer(async (req, res) => {
       return res.end(JSON.stringify({ error: "Invalid JSON" }));
     }
 
-    const input = [{ role: "system", content: SYSTEM_PROMPT }, ...messages];
-
     try {
+      // Fetch real Octant project data and build dynamic prompt
+      const octantData = await getOctantContext();
+      const systemPrompt = buildSystemPrompt(octantData);
+
+      const input = [{ role: "system", content: systemPrompt }, ...messages];
+
       const response = await fetch("https://api.openai.com/v1/responses", {
         method: "POST",
         headers: {
@@ -90,7 +92,6 @@ const server = createServer(async (req, res) => {
         },
         body: JSON.stringify({
           model: "gpt-4o",
-          tools: [{ type: "web_search_preview" }],
           input,
         }),
       });
@@ -112,7 +113,7 @@ const server = createServer(async (req, res) => {
     }
   }
 
-  // Static files: serve demo/index.html at root, and dist/widget.js
+  // Static files
   let filePath;
   if (req.url === "/" || req.url === "/index.html") {
     filePath = join(__dirname, "demo", "index.html");

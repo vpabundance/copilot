@@ -102,11 +102,15 @@ export function createPanel(onClose) {
 
   function addProjectCard(project) {
     const badge = getFundingBadge(project.fundingType);
+    const fundingInfo = project.matched
+      ? `<div class="oc-card-funding"><strong>Matched:</strong> ${Number(project.matched).toFixed(2)} ETH · <strong>Allocated:</strong> ${Number(project.allocated).toFixed(2)} ETH</div>`
+      : "";
     const card = document.createElement("div");
     card.className = "oc-card";
     card.innerHTML = `
       <div class="oc-card-name">${escHtml(project.name)}</div>
       <div class="oc-card-desc">${escHtml(project.description)}</div>
+      ${fundingInfo}
       <div class="oc-card-match"><strong>Why it matches:</strong> ${escHtml(project.matchReason)}</div>
       <div class="oc-card-footer">
         <span class="oc-badge" style="background:${badge.bg};color:${badge.text};border-color:${badge.border}">

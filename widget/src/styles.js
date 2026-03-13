@@ -197,6 +197,15 @@ const CSS = `
   margin-bottom: 8px;
   line-height: 1.45;
 }
+.oc-card-funding {
+  font-size: 12px;
+  color: #0F6E56;
+  margin-bottom: 8px;
+  line-height: 1.45;
+}
+.oc-card-funding strong {
+  color: #085041;
+}
 .oc-card-match {
   background: #f8f8f9;
   border-radius: 8px;
