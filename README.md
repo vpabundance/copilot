@@ -1,4 +1,4 @@
-# Octant Donation Copilot
+# Octant Copilot
 
 An embeddable AI-powered chat widget that helps users discover and donate to projects on [Octant](https://octant.app). Users describe their values or interests in natural language, and the copilot searches Octant in real time and returns personalized project recommendations.
 
