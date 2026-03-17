@@ -296,6 +296,68 @@ const CSS = `
   padding: 6px 16px 10px;
   flex-shrink: 0;
 }
+
+/* Inline (embedded) mode — panel fills a container element */
+.oc-inline-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.oc-inline-wrap .oc-panel {
+  position: static;
+  width: 100%;
+  max-height: none;
+  height: 100%;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  transition: none;
+}
+.oc-inline-wrap .oc-panel .oc-messages {
+  flex: 1;
+}
+.oc-inline-wrap .oc-panel .oc-card {
+  max-width: 96%;
+}
+.oc-inline-wrap .oc-panel .oc-msg {
+  max-width: 80%;
+}
+/* Minimize button in inline header */
+.oc-minimize-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+}
+.oc-minimize-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+/* Expand button in widget header */
+.oc-expand-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+}
+.oc-expand-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
 `;
 
 export function injectStyles() {
