@@ -22,12 +22,24 @@ const CLOSE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" 
   <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
 </svg>`;
 
-export function createPanel(onClose) {
+const MINIMIZE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/>
+</svg>`;
+
+const EXPAND_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+</svg>`;
+
+export function createPanel(onClose, { onToggleMode } = {}) {
   const history = [];
   let isLoading = false;
 
   const panel = document.createElement("div");
   panel.className = "oc-panel";
+
+  const toggleBtn = onToggleMode
+    ? `<button class="oc-expand-btn" aria-label="Expand">${EXPAND_ICON}</button>`
+    : "";
 
   panel.innerHTML = `
     <div class="oc-header">
@@ -36,6 +48,7 @@ export function createPanel(onClose) {
         <p class="oc-header-title">Octant Copilot</p>
         <p class="oc-header-sub">Find projects to support</p>
       </div>
+      ${toggleBtn}
       <button class="oc-close-btn" aria-label="Close">${CLOSE_ICON}</button>
     </div>
     <div class="oc-messages"></div>
@@ -52,6 +65,11 @@ export function createPanel(onClose) {
   const closeBtn = panel.querySelector(".oc-close-btn");
 
   closeBtn.addEventListener("click", onClose);
+
+  const expandBtn = panel.querySelector(".oc-expand-btn");
+  if (expandBtn && onToggleMode) {
+    expandBtn.addEventListener("click", () => onToggleMode());
+  }
 
   function addBotMessage(text) {
     const msg = document.createElement("div");
@@ -211,5 +229,9 @@ export function createPanel(onClose) {
     open() { panel.classList.add("oc-open"); textarea.focus(); },
     close() { panel.classList.remove("oc-open"); },
     isOpen() { return panel.classList.contains("oc-open"); },
+    setExpandIcon(isInline) {
+      const btn = panel.querySelector(".oc-expand-btn");
+      if (btn) btn.innerHTML = isInline ? MINIMIZE_ICON : EXPAND_ICON;
+    },
   };
 }
